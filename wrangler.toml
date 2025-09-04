@@ -1,0 +1,40 @@
+name = "mailreceive"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# 环境变量配置
+[vars]
+TEMPMAIL_PLUS_EMAIL = "liufei@mailto.plus"
+TEMPMAIL_PLUS_PIN = "test1234"
+TEMPMAIL_PLUS_API_URL = "https://tempmail.plus/api"
+SESSION_TIMEOUT = "1800"
+VERIFICATION_TIMEOUT = "180"
+MAX_RETRY_ATTEMPTS = "3"
+PIN_LENGTH = "8"
+
+# 开发环境配置
+[env.development]
+name = "mailreceive-dev"
+
+# 本地开发端口配置
+[env.development.dev]
+port = 8686
+
+# 测试环境配置
+[env.staging]
+name = "mailreceive-staging"
+
+# 生产环境配置
+[env.production]
+name = "mailreceive-prod"
+
+# KV命名空间配置 - 本地开发使用模拟KV
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "local-sessions"
+preview_id = "local-sessions-preview"
+
+[[kv_namespaces]]
+binding = "EMAILS"
+id = "local-emails"
+preview_id = "local-emails-preview"
