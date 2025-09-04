@@ -10,7 +10,6 @@
  */
 
 import { ResponseUtil } from './utils/response.js';
-import ConfigHandler from './handlers/configHandler.js';
 import SessionHandler from './handlers/sessionHandler.js';
 import { generateClientRegexCode } from './config/regexConfig.js';
 
@@ -20,23 +19,9 @@ import { generateClientRegexCode } from './config/regexConfig.js';
  * 定义所有API路由和对应的处理器方法。
  */
 const ROUTES = {
-  // 配置相关路由
-  'GET:/api/config/status': ConfigHandler.getConfigStatus,
-  'GET:/api/config/validate': ConfigHandler.validateConfig,
-  'POST:/api/config/reload': ConfigHandler.reloadConfig,
-  'GET:/api/config/details': ConfigHandler.getConfigDetails,
-  'GET:/api/health': ConfigHandler.healthCheck,
-  
-  // 会话相关路由
-  'POST:/api/session/create': SessionHandler.createSession,
-  'POST:/api/session/verify-pin': SessionHandler.verifyPin,
+  // 邮件相关路由（简化后）
   'GET:/api/session/emails': SessionHandler.getEmails,
-  'GET:/api/session/email-detail': SessionHandler.getEmailDetail,
-  'GET:/api/session/verification-code': SessionHandler.getVerificationCode,
-  'GET:/api/session/status': SessionHandler.getSessionStatus,
-  'DELETE:/api/session/cleanup': SessionHandler.cleanupSession,
-  'GET:/api/session/stats': SessionHandler.getSessionStats,
-  'GET:/api/session/validity': SessionHandler.checkSessionValidity
+  'GET:/api/session/email-detail': SessionHandler.getEmailDetail
 };
 
 /**
@@ -424,55 +409,8 @@ function serveStaticFile(filePath) {
                 if (result.success) {
                     const data = result.data;
                     
-                                         // 创建格式化的邮件详情HTML
-                     let detailHtml = \`
-                         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-                             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                                 <div style="margin-bottom: 10px;">
-                                     <strong style="color: #495057;">主题:</strong> 
-                                     <span style="color: #212529;">\${data.subject}</span>
-                                 </div>
-                                 <div style="margin-bottom: 10px;">
-                                     <strong style="color: #495057;">发件人:</strong> 
-                                     <span style="color: #212529;">\${data.from}</span>
-                                 </div>
-                                 <div style="margin-bottom: 10px;">
-                                     <strong style="color: #495057;">时间:</strong> 
-                                     <span style="color: #212529;">\${new Date(data.date).toLocaleString()}</span>
-                                 </div>
-                                 \${data.verificationCode ? \`
-                                 <div style="margin-bottom: 10px;">
-                                     <strong style="color: #28a745;">验证码:</strong> 
-                                     <span style="color: #28a745; font-size: 18px; font-weight: bold; background: #d4edda; padding: 5px 10px; border-radius: 4px;">\${data.verificationCode}</span>
-                                 </div>
-                                 \` : ''}
-                             </div>
-                             
-                             <div style="background: white; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px;">
-                                 <h4 style="margin-top: 0; color: #495057; border-bottom: 2px solid #e9ecef; padding-bottom: 10px;">邮件内容</h4>
-                                 <div style="line-height: 1.6; color: #212529; white-space: pre-wrap; font-size: 14px;">\${data.content}</div>
-                             </div>
-                             
-                             \${data.subject && data.subject.includes('Augment') ? \`
-                             <div style="margin-top: 15px; text-align: center;">
-                                 <button onclick="extractAugmentCode('\${data.content}', '\${data.subject}')" 
-                                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                                color: white; 
-                                                border: none; 
-                                                padding: 10px 20px; 
-                                                border-radius: 6px; 
-                                                font-size: 14px; 
-                                                cursor: pointer; 
-                                                transition: transform 0.2s;">
-                                     提取Augment验证码
-                                 </button>
-                             </div>
-                             \` : ''}
-                         </div>
-                     \`;
-                    
-                    // 显示邮件详情
-                    document.getElementById('emailDetailContent').innerHTML = detailHtml;
+                    // 直接显示邮件内容，不添加额外的包装
+                    document.getElementById('emailDetailContent').innerHTML = data.content || '<p style="color: #666;">邮件内容为空</p>';
                     document.getElementById('emailDetail').classList.remove('hidden');
                     document.getElementById('verificationResult').classList.add('hidden');
                     document.getElementById('errorMessage').classList.add('hidden');

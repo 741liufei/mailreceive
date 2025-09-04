@@ -18,23 +18,8 @@ name = "mailreceive-dev"
 
 # 本地开发端口配置
 [env.development.dev]
-port = 8686
-
-# 测试环境配置
-[env.staging]
-name = "mailreceive-staging"
+port = 8787
 
 # 生产环境配置
 [env.production]
 name = "mailreceive-prod"
-
-# KV命名空间配置 - 本地开发使用模拟KV
-[[kv_namespaces]]
-binding = "SESSIONS"
-id = "local-sessions"
-preview_id = "local-sessions-preview"
-
-[[kv_namespaces]]
-binding = "EMAILS"
-id = "local-emails"
-preview_id = "local-emails-preview"

@@ -1,16 +1,15 @@
 /**
- * Tempmail.plus服务集成类
+ * Tempmail.plus服务集成类（简化版）
  * 
  * 负责与tempmail.plus API的交互，包括邮件接收、验证码提取等功能。
- * 使用配置的邮箱地址和PIN码进行API调用。
  * 
  * @author mailreceive
- * @version 1.0.0
+ * @version 2.0.0
  * @since 2024-01-01
  */
 
 import { configManager } from '../utils/config.js';
-import { EXTRACTION_STRATEGY, REGEX_FLAGS } from '../config/regexConfig.js';
+import { EXTRACTION_STRATEGY } from '../config/regexConfig.js';
 
 /**
  * Tempmail.plus API错误类型
@@ -20,12 +19,11 @@ const TEMPMAIL_ERRORS = {
   INVALID_RESPONSE: 'Tempmail.plus API响应无效',
   EMAIL_NOT_FOUND: '邮件未找到',
   VERIFICATION_CODE_NOT_FOUND: '验证码未找到',
-  TIMEOUT_EXCEEDED: '等待超时',
   CONFIG_ERROR: '配置错误'
 };
 
 /**
- * Tempmail.plus服务类
+ * Tempmail.plus服务类（简化版）
  */
 class TempMailService {
   constructor() {
@@ -38,8 +36,6 @@ class TempMailService {
   /**
    * 初始化服务配置
    * 
-   * 从配置管理器加载tempmail.plus的配置信息。
-   * 
    * @param {Object} env 环境变量对象
    * @throws {Error} 配置加载失败时抛出错误
    */
@@ -51,55 +47,6 @@ class TempMailService {
       this.pin = this.config.emailService.actualEmailPin;
     } catch (error) {
       throw new Error(`${TEMPMAIL_ERRORS.CONFIG_ERROR}: ${error.message}`);
-    }
-  }
-
-  /**
-   * 获取配置的临时邮箱地址
-   * 
-   * @returns {string} 临时邮箱地址
-   */
-  getConfiguredEmail() {
-    return this.email;
-  }
-
-  /**
-   * 获取配置的PIN码
-   * 
-   * @returns {string} PIN码
-   */
-  getConfiguredPin() {
-    return this.pin;
-  }
-
-  /**
-   * 验证PIN码
-   * 
-   * 使用配置的PIN码验证临时邮箱的访问权限。
-   * 
-   * @returns {Promise<boolean>} 验证是否成功
-   * @throws {Error} 验证失败时抛出错误
-   */
-  async verifyPin() {
-    try {
-      await this.initialize();
-      
-      // 通过获取邮件列表来验证PIN码
-      const response = await fetch(`${this.apiUrl}/mails?email=${encodeURIComponent(this.email)}&epin=${encodeURIComponent(this.pin)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.result === true;
-    } catch (error) {
-      throw new Error(`${TEMPMAIL_ERRORS.API_REQUEST_FAILED}: ${error.message}`);
     }
   }
 
@@ -236,11 +183,8 @@ class TempMailService {
   /**
    * 从邮件内容中提取验证码
    * 
-   * 使用正则表达式从邮件内容中提取验证码。
-   * 支持多种常见的验证码格式。
-   * 
    * @param {string} content 邮件内容
-   * @returns {string|null} 提取的验证码，未找到时返回null
+   * @returns {Object} 提取结果对象
    */
   extractVerificationCode(content) {
     if (!content || typeof content !== 'string') {
@@ -282,19 +226,13 @@ class TempMailService {
   }
 
   /**
-   * 获取所有邮件（不查询验证码）
+   * 获取所有邮件并提取验证码
    * 
-   * 直接获取所有邮件，不进行验证码轮询。
-   * 
-   * @param {number} timeoutSeconds 超时时间(秒) - 保留参数以保持接口兼容
-   * @param {number} pollInterval 轮询间隔(秒) - 保留参数以保持接口兼容
-   * @param {number} maxPollCount 最大查询次数 - 保留参数以保持接口兼容
    * @returns {Promise<Object>} 包含所有邮件信息的对象
    * @throws {Error} 获取失败时抛出错误
    */
-  async waitForVerificationCode(timeoutSeconds = 180, pollInterval = 5, maxPollCount = 30) {
+  async waitForVerificationCode() {
     console.log('=== 开始获取所有邮件 ===');
-    console.log('直接获取邮件，不进行验证码轮询');
     
     const startTime = Date.now();
 
@@ -302,7 +240,6 @@ class TempMailService {
       // 直接获取邮件列表
       const emails = await this.getEmails();
       console.log('获取到邮件数量:', emails.length);
-      console.log('邮件列表:', emails);
       
       // 获取每封邮件的详细内容
       const detailedEmails = [];
@@ -312,13 +249,13 @@ class TempMailService {
         try {
           // 获取邮件内容
           const emailContent = await this.getEmailContent(email.id);
-          console.log('邮件内容长度:', emailContent.content ? emailContent.content.length : 0);
           
           // 提取验证码（如果存在）
           const extractResult = this.extractVerificationCode(emailContent.content);
           const verificationCode = extractResult.success ? extractResult.code : null;
-          console.log('提取的验证码:', verificationCode);
+          
           if (extractResult.success) {
+            console.log('提取的验证码:', verificationCode);
             console.log('使用的模式:', extractResult.patternDescription);
           }
           
@@ -367,92 +304,6 @@ class TempMailService {
       console.error('获取邮件失败:', error);
       throw new Error(`获取邮件失败: ${error.message}`);
     }
-  }
-
-  /**
-   * 检查邮箱状态
-   * 
-   * @returns {Promise<Object>} 邮箱状态信息
-   * @throws {Error} 检查失败时抛出错误
-   */
-  async checkEmailStatus() {
-    try {
-      await this.initialize();
-      
-      // 通过获取邮件列表来检查邮箱状态
-      const response = await fetch(`${this.apiUrl}/mails?email=${encodeURIComponent(this.email)}&epin=${encodeURIComponent(this.pin)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data.result) {
-        throw new Error(data.err?.msg || TEMPMAIL_ERRORS.INVALID_RESPONSE);
-      }
-
-      return {
-        email: this.email,
-        active: data.result,
-        messageCount: data.count || 0,
-        lastChecked: new Date().toISOString()
-      };
-    } catch (error) {
-      throw new Error(`${TEMPMAIL_ERRORS.API_REQUEST_FAILED}: ${error.message}`);
-    }
-  }
-
-  /**
-   * 清理邮箱
-   * 
-   * 删除邮箱中的所有邮件。
-   * 注意：tempmail.plus API可能不支持直接清理，这里返回成功状态
-   * 
-   * @returns {Promise<boolean>} 清理是否成功
-   * @throws {Error} 清理失败时抛出错误
-   */
-  async clearEmails() {
-    try {
-      await this.initialize();
-      
-      // tempmail.plus API可能不支持直接清理邮件
-      // 这里返回成功状态，实际清理可能需要其他方式
-      console.log('清理邮箱请求 - 注意：tempmail.plus API可能不支持直接清理邮件');
-      
-      return true;
-    } catch (error) {
-      throw new Error(`${TEMPMAIL_ERRORS.API_REQUEST_FAILED}: ${error.message}`);
-    }
-  }
-
-  /**
-   * 延时函数
-   * 
-   * @param {number} ms 延时毫秒数
-   * @returns {Promise} 延时Promise
-   */
-  sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * 获取服务状态信息
-   * 
-   * @returns {Object} 服务状态信息
-   */
-  getServiceStatus() {
-    return {
-      configured: !!this.email && !!this.pin,
-      email: this.email,
-      apiUrl: this.apiUrl,
-      lastInitialized: this.config ? new Date().toISOString() : null
-    };
   }
 }
 

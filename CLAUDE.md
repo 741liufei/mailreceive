@@ -58,24 +58,20 @@ src/
 ├── utils/               # 工具类
 │   ├── config.js        # 配置管理 - 环境变量和配置验证
 │   ├── response.js      # 响应处理 - 统一的API响应格式
-│   └── validation.js    # 输入验证 - 邮箱、PIN码等验证
+│   └── validation.js    # 输入验证 - 邮箱、参数等验证
 ├── services/            # 服务层
-│   ├── tempMailService.js  # tempmail.plus API 集成
-│   └── sessionService.js   # 会话管理和KV存储操作
+│   └── tempMailService.js  # tempmail.plus API 集成
 └── handlers/            # 处理器层
-    ├── configHandler.js    # 配置相关API处理器
-    └── sessionHandler.js   # 会话相关API处理器
+    └── sessionHandler.js   # 邮件查询API处理器
 ```
 
 ### 路由设计
 所有路由在 `src/index.js` 中定义，采用 `${method}:${path}` 格式：
 
-- 配置相关: `/api/config/*` - 配置状态、验证、健康检查
-- 会话相关: `/api/session/*` - 会话创建、验证、邮件获取
+- 邮件查询: `/api/session/*` - 邮件列表、邮件详情获取
 
 ### 数据存储
-- **SESSIONS KV**: 存储用户会话信息（会话ID、邮箱、PIN码、过期时间）
-- **EMAILS KV**: 存储邮件数据（邮件ID、内容、验证码等）
+项目直接通过 tempmail.plus API 查询邮件，无需本地KV存储会话数据。
 
 ## 开发规范
 
@@ -99,31 +95,25 @@ src/
 ### 安全特性
 - 输入验证和清理（防止XSS攻击）
 - 环境变量敏感信息保护
-- 会话超时机制
-- PIN码验证
+- 邮箱地址格式验证
+- API参数验证
 
 ## 环境配置
 
 ### 必需环境变量
-- `TEMPMAIL_PLUS_EMAIL`: tempmail.plus 邮箱地址
-- `TEMPMAIL_PLUS_PIN`: tempmail.plus PIN码
+- `ACTUAL_EMAIL`: tempmail.plus 邮箱地址
+- `ACTUAL_EMAIL_PIN`: tempmail.plus PIN码
 
 ### 可选环境变量
-- `TEMPMAIL_PLUS_API_URL`: API基础URL（默认：https://tempmail.plus/api）
-- `SESSION_TIMEOUT`: 会话超时时间（默认：1800秒）
-- `VERIFICATION_TIMEOUT`: 验证码等待超时（默认：180秒）
-- `MAX_RETRY_ATTEMPTS`: 最大重试次数（默认：3次）
-- `PIN_LENGTH`: PIN码长度（默认：8位）
+- `EMAIL_API_URL`: API基础URL（默认：https://tempmail.plus/api）
 
 ## 部署注意事项
 
 ### 本地开发
-- 使用模拟 KV 存储，无需创建实际 KV 命名空间
 - 通过命令行设置环境变量或创建 `.env` 文件
 - 访问 http://localhost:8787 进行测试
 
 ### 生产部署
-- 必须创建实际的 KV 命名空间并更新 `wrangler.toml`
 - 使用 `wrangler secret` 设置敏感环境变量
 - 配置适当的监控和日志
 
