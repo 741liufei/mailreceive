@@ -223,7 +223,8 @@ class TempMailService {
         subject: data.subject || '无主题',
         from: data.from || '未知发件人',
         date: date,
-        content: data.text || data.html || '',
+        content: data.html || '',  // html 字段映射到 content 字段
+        text: data.text || '',     // text 字段保持不变
         html: data.html || ''
       };
     } catch (error) {

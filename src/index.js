@@ -646,9 +646,10 @@ function serveStaticFile(filePath) {
                      if (result.success) {
                          const data = result.data;
                          
-                         // 提取验证码
+                         // 提取验证码 - 优先使用text字段，直接使用原始内容
+                         const rawContent = data.text || data.content || '';
                          const codePattern = /Your verification code is:\s*(\d+)/i;
-                         const match = data.content.match(codePattern);
+                         const match = rawContent.match(codePattern);
                          
                          if (match && match[1]) {
                              results.push({
@@ -826,7 +827,7 @@ function serveStaticFile(filePath) {
                 const latestEmail = sortedEmails[0];
                 console.log('最新邮件:', latestEmail);
                  
-                                 // 4. 获取最新邮件的详情
+                // 4. 获取最新邮件的详情
                 try {
                     const detailResponse = await fetch(\`/api/session/email-detail?userEmail=\${encodeURIComponent(userEmail)}&emailId=\${latestEmail.id}\`);
                     const detailResult = await detailResponse.json();
@@ -839,34 +840,20 @@ function serveStaticFile(filePath) {
                     const emailData = detailResult.data;
                     console.log('邮件详情:', emailData);
                  
-                                                         // 5. 提取Augment验证码 - 优先使用text字段，避免HTML解析问题
+                    // 5. 提取Augment验证码 - 优先使用text字段，避免HTML解析问题
                     console.log('原始邮件内容 (content):', emailData.content);
                     console.log('原始邮件内容 (text):', emailData.text);
                     
-                    // 优先使用text字段，如果不存在则使用content字段
+                    // 优先使用text字段，然后才取content字段 - 直接使用原始内容
                     let rawContent = emailData.text || emailData.content || '';
                     
-                    // 如果使用content字段，需要清理HTML标签和特殊字符
-                    if (!emailData.text && emailData.content) {
-                        rawContent = emailData.content
-                            .replace(/<[^>]*>/g, ' ')  // 移除HTML标签
-                            .replace(/&nbsp;/g, ' ')   // 替换HTML实体
-                            .replace(/\s+/g, ' ')      // 合并多个空格
-                            .trim();
-                    }
+                    console.log('原始内容长度:', rawContent.length);
+                    console.log('原始内容(前200字符):', rawContent.substring(0, 200));
+                    console.log('是否包含关键词:', rawContent.includes('Your verification code'));
                     
-                    const cleanContent = rawContent;
-                    
-                    console.log('清理后的内容:', cleanContent);
-                    
-                    // 尝试多种正则表达式模式
+                    // 使用测试中验证成功的正则表达式模式
                     const patterns = [
-                        /Your verification code is:\s*(\d+)/i,
-                        /verification code is:\s*(\d+)/i,
-                        /code is:\s*(\d+)/i,
-                        /验证码[：:]\s*(\d+)/i,
-                        /(\d{6})/g,
-                        /(\d{4,8})/g
+                        /Your verification code is:\s*(\d+)/i  // 主要模式，在TEXT字段中成功验证
                     ];
                     
                     let verificationCode = null;
@@ -876,14 +863,16 @@ function serveStaticFile(filePath) {
                         const pattern = patterns[i];
                         console.log('尝试模式 ' + (i + 1) + ':', pattern);
                         
-                        const match = cleanContent.match(pattern);
+                        const match = rawContent.match(pattern);
                         console.log('模式 ' + (i + 1) + ' 匹配结果:', match);
                         
                         if (match && match[1]) {
                             verificationCode = match[1];
                             matchedPattern = pattern;
-                            console.log('模式 ' + (i + 1) + ' 成功提取验证码:', verificationCode);
+                            console.log('✅ 模式 ' + (i + 1) + ' 成功提取验证码:', verificationCode);
                             break;
+                        } else {
+                            console.log('❌ 模式 ' + (i + 1) + ' 匹配失败');
                         }
                     }
                     
@@ -892,7 +881,7 @@ function serveStaticFile(filePath) {
                     
                     if (!verificationCode) {
                         // 显示邮件内容供调试
-                        showError(\`在邮件中未找到验证码\\n\\n邮件内容:\\n\${emailData.content}\\n\\n请检查邮件内容格式\`);
+                        showError(\`在邮件中未找到验证码\\n\\n邮件内容:\\n\${emailData.text}\\n\\n请检查邮件内容格式\`);
                         return;
                     }
                  

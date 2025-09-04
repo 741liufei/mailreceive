@@ -328,40 +328,7 @@ class SessionService {
     }
   }
 
-  /**
-   * 获取邮件详情
-   * 
-   * @param {string} sessionId 会话ID
-   * @param {string} emailId 邮件ID
-   * @returns {Promise<Object>} 邮件详情
-   * @throws {Error} 获取失败时抛出错误
-   */
-  async getEmailDetail(sessionId, emailId) {
-    try {
-      const session = await this.getSession(sessionId);
-      
-      if (!session) {
-        throw new Error(SESSION_ERRORS.SESSION_NOT_FOUND);
-      }
-      
-      if (!session.verified) {
-        throw new Error('会话未验证');
-      }
-      
-      // 从tempmail.plus获取邮件详情
-      const emailDetail = await tempMailService.getEmailContent(emailId);
-      
-      // 提取验证码
-      const verificationCode = tempMailService.extractVerificationCode(emailDetail.content);
-      
-      // 添加验证码信息到邮件详情
-      emailDetail.verificationCode = verificationCode;
-      
-      return emailDetail;
-    } catch (error) {
-      throw new Error(`获取邮件详情失败: ${error.message}`);
-    }
-  }
+
 
   /**
    * 获取所有邮件（不查询验证码）
