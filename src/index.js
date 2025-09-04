@@ -357,6 +357,9 @@ function serveStaticFile(filePath) {
                     
                     showSessionInfo();
                     showSuccess(message);
+                    
+                    // 确保隐藏邮件详情区域，只显示邮件列表
+                    document.getElementById('emailDetail').classList.add('hidden');
                 } else {
                     showError(result.message);
                 }
