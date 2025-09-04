@@ -529,7 +529,7 @@ function serveStaticFile(filePath) {
                                  <p style="color: #666; margin: 0; font-size: 14px;">验证码已成功提取，您可以复制使用</p>
                              </div>
                              <div style="margin-top: 15px; text-align: center;">
-                                 <button onclick="copyToClipboard('\${verificationCode}')" 
+                                 <button onclick="copyToClipboard('\${verificationCode}', this)" 
                                          style="background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
                                      复制验证码
                                  </button>
@@ -586,22 +586,127 @@ function serveStaticFile(filePath) {
              }
          }
          
-         function copyToClipboard(text) {
-             navigator.clipboard.writeText(text).then(function() {
-                 // 显示复制成功提示
-                 const button = event.target;
-                 const originalText = button.textContent;
-                 button.textContent = '已复制!';
-                 button.style.background = '#28a745';
+         function copyToClipboard(text, buttonElement) {
+             // 如果没有传入按钮元素，尝试从事件中获取
+             if (!buttonElement && event && event.target) {
+                 buttonElement = event.target;
+             }
+             
+             // 首先尝试使用现代的Clipboard API
+             if (navigator.clipboard && window.isSecureContext) {
+                 navigator.clipboard.writeText(text).then(function() {
+                     showCopySuccess(buttonElement, '已复制!');
+                 }).catch(function(err) {
+                     console.error('Clipboard API复制失败:', err);
+                     fallbackCopyTextToClipboard(text, buttonElement);
+                 });
+             } else {
+                 // 回退到传统的复制方法
+                 fallbackCopyTextToClipboard(text, buttonElement);
+             }
+         }
+         
+         function fallbackCopyTextToClipboard(text, buttonElement) {
+             const textArea = document.createElement('textarea');
+             textArea.value = text;
+             
+             // 避免在页面上显示文本框
+             textArea.style.position = 'fixed';
+             textArea.style.left = '-999999px';
+             textArea.style.top = '-999999px';
+             
+             document.body.appendChild(textArea);
+             textArea.focus();
+             textArea.select();
+             
+             try {
+                 const successful = document.execCommand('copy');
+                 if (successful) {
+                     showCopySuccess(buttonElement, '已复制!');
+                 } else {
+                     showCopyError(buttonElement, '复制失败，请手动复制验证码');
+                 }
+             } catch (err) {
+                 console.error('Fallback复制失败:', err);
+                 showCopyError(buttonElement, '复制失败，请手动复制验证码');
+             }
+             
+             document.body.removeChild(textArea);
+         }
+         
+         function showCopySuccess(buttonElement, message) {
+             if (buttonElement) {
+                 const originalText = buttonElement.textContent;
+                 const originalBackground = buttonElement.style.background || '#28a745';
+                 
+                 buttonElement.textContent = message;
+                 buttonElement.style.background = '#28a745';
                  
                  setTimeout(() => {
-                     button.textContent = originalText;
-                     button.style.background = '#28a745';
+                     buttonElement.textContent = originalText;
+                     buttonElement.style.background = originalBackground;
                  }, 2000);
-             }).catch(function(err) {
-                 console.error('复制失败:', err);
-                 alert('复制失败，请手动复制验证码');
-             });
+             } else {
+                 // 如果没有按钮元素，显示通知
+                 showNotification(message, 'success');
+             }
+         }
+         
+         function showCopyError(buttonElement, message) {
+             if (buttonElement) {
+                 const originalText = buttonElement.textContent;
+                 const originalBackground = buttonElement.style.background || '#28a745';
+                 
+                 buttonElement.textContent = '复制失败';
+                 buttonElement.style.background = '#dc3545';
+                 
+                 setTimeout(() => {
+                     buttonElement.textContent = originalText;
+                     buttonElement.style.background = originalBackground;
+                 }, 2000);
+             }
+             
+             alert(message);
+         }
+         
+         function showNotification(message, type = 'info') {
+             // 创建通知元素
+             const notification = document.createElement('div');
+             notification.style.cssText = \`
+                 position: fixed;
+                 top: 20px;
+                 right: 20px;
+                 padding: 12px 20px;
+                 border-radius: 6px;
+                 color: white;
+                 font-weight: 500;
+                 z-index: 10000;
+                 animation: slideIn 0.3s ease-out;
+                 background: \${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#6c757d'};
+             \`;
+             notification.textContent = message;
+             
+             // 添加CSS动画
+             if (!document.querySelector('#notification-styles')) {
+                 const styles = document.createElement('style');
+                 styles.id = 'notification-styles';
+                 styles.textContent = \`
+                     @keyframes slideIn {
+                         from { transform: translateX(100%); opacity: 0; }
+                         to { transform: translateX(0); opacity: 1; }
+                     }
+                 \`;
+                 document.head.appendChild(styles);
+             }
+             
+             document.body.appendChild(notification);
+             
+             // 3秒后自动移除
+             setTimeout(() => {
+                 if (notification.parentNode) {
+                     notification.parentNode.removeChild(notification);
+                 }
+             }, 3000);
          }
          
          function closeExtractResult() {
@@ -699,7 +804,7 @@ function serveStaticFile(filePath) {
                                  <span style="font-size: 20px; font-weight: bold; color: #28a745; background: #f8fff8; padding: 8px 12px; border-radius: 4px; border: 1px dashed #28a745;">
                                      \${result.verificationCode}
                                  </span>
-                                 <button onclick="copyToClipboard('\${result.verificationCode}')" 
+                                 <button onclick="copyToClipboard('\${result.verificationCode}', this)" 
                                          style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; margin-left: 8px; font-size: 11px;">
                                      复制
                                  </button>
@@ -752,7 +857,8 @@ function serveStaticFile(filePath) {
              }
              
              const allCodes = window.batchResults.map(result => result.verificationCode).join(', ');
-             copyToClipboard(allCodes);
+             // 使用事件源作为按钮元素
+             copyToClipboard(allCodes, event ? event.target : null);
          }
          
          function closeBatchResult() {
@@ -914,7 +1020,7 @@ function serveStaticFile(filePath) {
                              <p style="color: #666; margin: 0 0 15px 0; font-size: 14px;">验证码已成功提取，您可以复制使用</p>
                              
                              <div style="display: flex; gap: 10px; justify-content: center;">
-                                 <button onclick="copyToClipboard('\${verificationCode}')" 
+                                 <button onclick="copyToClipboard('\${verificationCode}', this)" 
                                          style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: transform 0.2s;"
                                          onmouseover="this.style.transform='translateY(-2px)'"
                                          onmouseout="this.style.transform='translateY(0)'">
