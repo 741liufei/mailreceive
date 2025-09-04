@@ -12,6 +12,7 @@
 import { ResponseUtil } from './utils/response.js';
 import ConfigHandler from './handlers/configHandler.js';
 import SessionHandler from './handlers/sessionHandler.js';
+import { generateClientRegexCode } from './config/regexConfig.js';
 
 /**
  * 路由配置
@@ -249,7 +250,9 @@ function serveStaticFile(filePath) {
     </div>
 
     <script>
-                let currentUserEmail = null;
+        ${generateClientRegexCode()}
+        
+        let currentUserEmail = null;
         
         async function getEmails() {
             const userEmail = document.getElementById('userEmail').value;
@@ -505,18 +508,20 @@ function serveStaticFile(filePath) {
          
          function extractAugmentCode(content, subject) {
              try {
-                 // 使用正则表达式提取验证码
-                 // 匹配 "Your verification code is: 数字" 格式
-                 const codePattern = /Your verification code is:\s*(\d+)/i;
-                 const match = content.match(codePattern);
+                 // 使用模块化的验证码提取函数
+                 const extractResult = extractVerificationCode(content);
                  
-                 if (match && match[1]) {
-                     const verificationCode = match[1];
+                 if (extractResult.success) {
+                     const verificationCode = extractResult.code;
                      
                      // 创建验证码显示区域
                      let resultHtml = \`
                          <div style="background: #e8f5e8; border: 2px solid #28a745; border-radius: 8px; padding: 20px; margin-top: 15px;">
                              <h4 style="color: #28a745; margin-top: 0; margin-bottom: 15px;">✅ Augment验证码提取成功</h4>
+                             <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 12px; color: #666;">
+                                 <strong>使用模式:</strong> \${extractResult.patternDescription}<br>
+                                 <strong>匹配文本:</strong> \${extractResult.matchedText}
+                             </div>
                              <div style="text-align: center;">
                                  <div style="font-size: 24px; font-weight: bold; color: #28a745; background: white; padding: 15px; border-radius: 6px; border: 2px dashed #28a745; display: inline-block; margin-bottom: 10px;">
                                      \${verificationCode}
@@ -546,6 +551,7 @@ function serveStaticFile(filePath) {
                          <div style="background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; padding: 20px; margin-top: 15px;">
                              <h4 style="color: #856404; margin-top: 0; margin-bottom: 15px;">⚠️ 未找到验证码</h4>
                              <p style="color: #856404; margin: 0;">在邮件内容中未找到符合格式的验证码。</p>
+                             <p style="color: #856404; margin: 10px 0 0 0; font-size: 12px;">错误信息: \${extractResult.message}</p>
                              <div style="margin-top: 15px; text-align: center;">
                                  <button onclick="closeExtractResult()" 
                                          style="background: #ffc107; color: #212529; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
@@ -648,15 +654,14 @@ function serveStaticFile(filePath) {
                          
                          // 提取验证码 - 优先使用text字段，直接使用原始内容
                          const rawContent = data.text || data.content || '';
-                         const codePattern = /Your verification code is:\s*(\d+)/i;
-                         const match = rawContent.match(codePattern);
+                         const extractResult = extractVerificationCode(rawContent);
                          
-                         if (match && match[1]) {
+                         if (extractResult.success) {
                              results.push({
                                  subject: data.subject,
                                  from: data.from,
                                  date: data.date,
-                                 verificationCode: match[1]
+                                 verificationCode: extractResult.code
                              });
                          }
                      }
@@ -851,29 +856,21 @@ function serveStaticFile(filePath) {
                     console.log('原始内容(前200字符):', rawContent.substring(0, 200));
                     console.log('是否包含关键词:', rawContent.includes('Your verification code'));
                     
-                    // 使用测试中验证成功的正则表达式模式
-                    const patterns = [
-                        /Your verification code is:\s*(\d+)/i  // 主要模式，在TEXT字段中成功验证
-                    ];
+                    // 使用模块化的验证码提取函数
+                    const extractResult = extractVerificationCode(rawContent);
+                    
+                    console.log('模块化提取结果:', extractResult);
                     
                     let verificationCode = null;
                     let matchedPattern = null;
                     
-                    for (let i = 0; i < patterns.length; i++) {
-                        const pattern = patterns[i];
-                        console.log('尝试模式 ' + (i + 1) + ':', pattern);
-                        
-                        const match = rawContent.match(pattern);
-                        console.log('模式 ' + (i + 1) + ' 匹配结果:', match);
-                        
-                        if (match && match[1]) {
-                            verificationCode = match[1];
-                            matchedPattern = pattern;
-                            console.log('✅ 模式 ' + (i + 1) + ' 成功提取验证码:', verificationCode);
-                            break;
-                        } else {
-                            console.log('❌ 模式 ' + (i + 1) + ' 匹配失败');
-                        }
+                    if (extractResult.success) {
+                        verificationCode = extractResult.code;
+                        matchedPattern = extractResult.patternDescription;
+                        console.log('✅ 模块化提取成功 - 验证码:', verificationCode);
+                        console.log('使用的模式:', matchedPattern);
+                    } else {
+                        console.log('❌ 模块化提取失败:', extractResult.message);
                     }
                     
                     console.log('最终提取的验证码:', verificationCode);
@@ -881,7 +878,8 @@ function serveStaticFile(filePath) {
                     
                     if (!verificationCode) {
                         // 显示邮件内容供调试
-                        showError(\`在邮件中未找到验证码\\n\\n邮件内容:\\n\${emailData.text}\\n\\n请检查邮件内容格式\`);
+                        const errorMessage = extractResult ? extractResult.message : '未知错误';
+                        showError(\`在邮件中未找到验证码\\n\\n错误信息: \${errorMessage}\\n\\n邮件内容:\\n\${emailData.text}\\n\\n请检查邮件内容格式\`);
                         return;
                     }
                  
@@ -902,6 +900,10 @@ function serveStaticFile(filePath) {
                              <div style="margin-bottom: 8px;">
                                  <strong style="color: #495057;">时间:</strong> 
                                  <span style="color: #212529;">\${new Date(emailData.date).toLocaleString()}</span>
+                             </div>
+                             <div style="margin-bottom: 8px;">
+                                 <strong style="color: #495057;">使用模式:</strong> 
+                                 <span style="color: #28a745; font-size: 12px;">\${matchedPattern}</span>
                              </div>
                          </div>
                          

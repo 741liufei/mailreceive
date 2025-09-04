@@ -10,6 +10,7 @@
  */
 
 import { configManager } from '../utils/config.js';
+import { EXTRACTION_STRATEGY, REGEX_FLAGS } from '../config/regexConfig.js';
 
 /**
  * Tempmail.plus API错误类型
@@ -243,34 +244,41 @@ class TempMailService {
    */
   extractVerificationCode(content) {
     if (!content || typeof content !== 'string') {
-      return null;
+      return {
+        success: false,
+        code: null,
+        message: '无效的邮件内容'
+      };
     }
 
-    // 验证码正则表达式模式
-    const patterns = [
-      // 6位数字验证码
-      /\b\d{6}\b/g,
-      // 4位数字验证码
-      /\b\d{4}\b/g,
-      // 8位数字验证码
-      /\b\d{8}\b/g,
-      // 字母数字混合验证码(6-8位)
-      /\b[a-zA-Z0-9]{6,8}\b/g,
-      // 带连字符的验证码
-      /\b\d{3}-\d{3}\b/g,
-      // 带空格的验证码
-      /\b\d{3}\s\d{3}\b/g
-    ];
-
-    for (const pattern of patterns) {
-      const matches = content.match(pattern);
-      if (matches && matches.length > 0) {
-        // 返回第一个匹配的验证码
-        return matches[0];
+    // 使用模块化的验证码提取策略
+    for (let i = 0; i < EXTRACTION_STRATEGY.length; i++) {
+      const strategy = EXTRACTION_STRATEGY[i];
+      
+      try {
+        const regex = new RegExp(strategy.pattern, strategy.flags);
+        const match = content.match(regex);
+        
+        if (match && match[1]) {
+          return {
+            success: true,
+            code: match[1],
+            patternName: strategy.name,
+            patternDescription: strategy.description,
+            matchedText: match[0]
+          };
+        }
+      } catch (error) {
+        console.error(`正则表达式执行错误 [${strategy.name}]:`, error);
+        continue;
       }
     }
 
-    return null;
+    return {
+      success: false,
+      code: null,
+      message: '未找到匹配的验证码模式'
+    };
   }
 
   /**
@@ -307,8 +315,12 @@ class TempMailService {
           console.log('邮件内容长度:', emailContent.content ? emailContent.content.length : 0);
           
           // 提取验证码（如果存在）
-          const verificationCode = this.extractVerificationCode(emailContent.content);
+          const extractResult = this.extractVerificationCode(emailContent.content);
+          const verificationCode = extractResult.success ? extractResult.code : null;
           console.log('提取的验证码:', verificationCode);
+          if (extractResult.success) {
+            console.log('使用的模式:', extractResult.patternDescription);
+          }
           
           // 构建详细邮件信息
           detailedEmails.push({
