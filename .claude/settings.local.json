@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/D:\\IdeaProject\\mailreceive/**)",
+      "Read(/D:\\IdeaProject\\mailreceive/**)",
+      "Read(/D:\\IdeaProject\\mailreceive\\src/**)",
+      "Read(/D:\\IdeaProject\\mailreceive/**)",
+      "Read(/D:\\IdeaProject\\mailreceive\\src\\services/**)",
+      "Read(/D:\\IdeaProject\\mailreceive\\docs/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

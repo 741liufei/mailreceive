@@ -196,7 +196,7 @@ function serveStaticFile(filePath) {
             </small>
         </div>
         
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
             <button onclick="getEmails()">获取邮件列表</button>
             <button onclick="getAugmentCode()" 
                     style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
@@ -208,6 +208,17 @@ function serveStaticFile(filePath) {
                            cursor: pointer; 
                            transition: transform 0.2s;">
                 🚀 获取Augment验证码
+            </button>
+            <button onclick="getGithubCode()" 
+                    style="background: linear-gradient(135deg, #6e5494 0%, #24292e 100%); 
+                           color: white; 
+                           border: none; 
+                           padding: 12px 24px; 
+                           border-radius: 8px; 
+                           font-size: 16px; 
+                           cursor: pointer; 
+                           transition: transform 0.2s;">
+                🐙 获取GitHub验证码
             </button>
         </div>
         
@@ -994,6 +1005,199 @@ function serveStaticFile(filePath) {
             } catch (error) {
                 console.error('获取Augment验证码失败:', error);
                 showError('获取Augment验证码失败: ' + error.message);
+            }
+        }
+        
+        // 获取 GitHub 验证码函数
+        async function getGithubCode() {
+            const userEmail = document.getElementById('userEmail').value;
+            if (!userEmail) {
+                showError('请输入邮箱地址');
+                return;
+            }
+            
+            currentUserEmail = userEmail;
+            
+            try {
+                // 显示处理状态
+                showSuccess('🔄 正在获取 GitHub 验证码...');
+                
+                // 1. 获取邮件列表
+                const response = await fetch(\`/api/session/emails?userEmail=\${encodeURIComponent(userEmail)}\`);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    showError(result.message);
+                    return;
+                }
+                
+                const data = result.data;
+                if (!data.emails || data.emails.length === 0) {
+                    showError('未找到任何邮件');
+                    return;
+                }
+                
+                // 2. 先按邮箱后缀筛选邮件（与用户邮箱后缀相同）
+                const emailSuffix = userEmail.split('@')[1];
+                console.log('用户邮箱后缀:', emailSuffix);
+                
+                const emailsWithSameSuffix = data.emails.filter(email => {
+                    const fromEmail = email.from || '';
+                    if (!fromEmail) return false;
+                    
+                    const emailSuffixFromEmail = fromEmail.split('@')[1];
+                    return emailSuffixFromEmail === emailSuffix;
+                });
+                
+                console.log('按邮箱后缀筛选后的邮件数量:', emailsWithSameSuffix.length);
+                
+                if (emailsWithSameSuffix.length === 0) {
+                    showError('未找到匹配邮箱后缀的邮件');
+                    return;
+                }
+                
+                // 3. 按时间排序
+                const sortedEmails = emailsWithSameSuffix.sort((a, b) => {
+                    const dateA = new Date(a.date || 0);
+                    const dateB = new Date(b.date || 0);
+                    return dateB - dateA; // 降序，最新的在前
+                });
+                
+                console.log('排序后的邮件列表:', sortedEmails.map(e => ({
+                    subject: e.subject,
+                    from: e.from,
+                    date: e.date
+                })));
+                
+                // 4. 逐个获取邮件详情，查找包含 GitHub 验证码的邮件
+                let foundVerificationCode = null;
+                let foundEmail = null;
+                let foundPattern = null;
+                
+                showSuccess('🔄 正在逐个检查邮件，查找 GitHub 验证码...');
+                
+                for (let i = 0; i < sortedEmails.length; i++) {
+                    const email = sortedEmails[i];
+                    console.log(\`\n检查第 \${i + 1}/\${sortedEmails.length} 封邮件:\`, email.subject);
+                    
+                    try {
+                        // 获取邮件详情
+                        const detailResponse = await fetch(\`/api/session/email-detail?userEmail=\${encodeURIComponent(userEmail)}&emailId=\${email.id}\`);
+                        const detailResult = await detailResponse.json();
+                        
+                        if (!detailResult.success) {
+                            console.log('获取邮件详情失败:', detailResult.message);
+                            continue;
+                        }
+                        
+                        const emailData = detailResult.data;
+                        
+                        // 检查是否是 GitHub 邮件
+                        const fromEmail = (emailData.from || '').toLowerCase();
+                        const subject = (emailData.subject || '').toLowerCase();
+                        const isFromGithub = fromEmail.includes('github.com') || fromEmail.includes('github');
+                        
+                        console.log('发件人:', emailData.from);
+                        console.log('是否来自 GitHub:', isFromGithub);
+                        
+                        if (!isFromGithub) {
+                            console.log('❌ 不是 GitHub 邮件，跳过');
+                            continue;
+                        }
+                        
+                        // 提取验证码
+                        let rawContent = emailData.text || emailData.content || '';
+                        console.log('邮件内容长度:', rawContent.length);
+                        console.log('邮件内容预览:', rawContent.substring(0, 200));
+                        
+                        const extractResult = extractVerificationCode(rawContent);
+                        
+                        if (extractResult.success) {
+                            console.log('✅ 找到验证码:', extractResult.code);
+                            console.log('使用的模式:', extractResult.patternDescription);
+                            
+                            foundVerificationCode = extractResult.code;
+                            foundEmail = emailData;
+                            foundPattern = extractResult.patternDescription;
+                            break; // 找到验证码，停止搜索
+                        } else {
+                            console.log('❌ 未找到验证码:', extractResult.message);
+                        }
+                        
+                        // 添加延迟避免请求过快
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                        
+                    } catch (error) {
+                        console.error('处理邮件失败:', error);
+                        continue;
+                    }
+                }
+                
+                // 5. 检查是否找到验证码
+                if (!foundVerificationCode || !foundEmail) {
+                    showError(\`未在邮件中找到 GitHub 验证码\\n\\n已检查 \${sortedEmails.length} 封邮件\\n\\n提示：\\n- 请确保邮箱中有 GitHub 发送的验证码邮件\\n- GitHub 验证码通常是 8 位数字\\n- 可以点击"获取邮件列表"手动查看所有邮件\`);
+                    return;
+                }
+                
+                // 6. 显示结果
+                const resultHtml = \`
+                    <div style="background: #f6f8fa; border: 2px solid #6e5494; border-radius: 8px; padding: 20px; margin-top: 15px;">
+                        <h4 style="color: #6e5494; margin-top: 0; margin-bottom: 15px;">✅ GitHub 验证码获取成功</h4>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #e1e4e8;">
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #24292e;">邮件主题:</strong> 
+                                <span style="color: #586069;">\${foundEmail.subject}</span>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #24292e;">发件人:</strong> 
+                                <span style="color: #586069;">\${foundEmail.from}</span>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #24292e;">时间:</strong> 
+                                <span style="color: #586069;">\${new Date(foundEmail.date).toLocaleString()}</span>
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                <strong style="color: #24292e;">使用模式:</strong> 
+                                <span style="color: #6e5494; font-size: 12px;">\${foundPattern}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: bold; color: #6e5494; background: white; padding: 20px; border-radius: 8px; border: 3px dashed #6e5494; display: inline-block; margin-bottom: 15px; letter-spacing: 4px; font-family: 'Courier New', monospace;">
+                                \${foundVerificationCode}
+                            </div>
+                            <p style="color: #586069; margin: 0 0 15px 0; font-size: 14px;">🐙 GitHub 验证码已成功提取，您可以复制使用</p>
+                            
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="copyToClipboard('\${foundVerificationCode}', this)" 
+                                        style="background: #6e5494; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: transform 0.2s;"
+                                        onmouseover="this.style.transform='translateY(-2px)'"
+                                        onmouseout="this.style.transform='translateY(0)'">
+                                    📋 复制验证码
+                                </button>
+                                <button onclick="viewEmailDetail('\${foundEmail.id}', '\${foundEmail.subject}')" 
+                                        style="background: #24292e; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: transform 0.2s;"
+                                        onmouseover="this.style.transform='translateY(-2px)'"
+                                        onmouseout="this.style.transform='translateY(0)'">
+                                    📧 查看邮件详情
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                \`;
+                
+                // 更新邮箱信息显示
+                document.getElementById('userEmailDisplay').textContent = userEmail;
+                document.getElementById('emailCount').textContent = data.emails.length;
+                
+                // 显示结果
+                showSessionInfo();
+                showSuccess(resultHtml);
+                
+            } catch (error) {
+                console.error('获取 GitHub 验证码失败:', error);
+                showError('获取 GitHub 验证码失败: ' + error.message);
             }
         }
     </script>

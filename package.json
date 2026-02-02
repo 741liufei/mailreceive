@@ -1,0 +1,30 @@
+{
+  "name": "mailreceive",
+  "version": "1.0.0",
+  "description": "轻量级邮箱接收邮件Web应用 - 基于Cloudflare Workers",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "deploy:production": "wrangler deploy --env production",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:report": "npx playwright show-report",
+    "check-secrets": "pwsh -File scripts/check-secrets.ps1",
+    "precommit": "npm run check-secrets"
+  },
+  "keywords": [
+    "cloudflare-workers",
+    "email",
+    "tempmail",
+    "verification-code"
+  ],
+  "author": "mailreceive",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "wrangler": "^4.33.2"
+  }
+}

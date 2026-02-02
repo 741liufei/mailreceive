@@ -1,0 +1,301 @@
+{
+  "config": {
+    "configFile": "D:\\IdeaProject\\mailreceive\\playwright.config.js",
+    "rootDir": "D:/IdeaProject/mailreceive/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "D:/IdeaProject/mailreceive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/IdeaProject/mailreceive/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/IdeaProject/mailreceive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "D:/IdeaProject/mailreceive/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/IdeaProject/mailreceive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "D:/IdeaProject/mailreceive/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/IdeaProject/mailreceive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "D:/IdeaProject/mailreceive/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/IdeaProject/mailreceive/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "D:/IdeaProject/mailreceive/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.55.0",
+    "workers": 8,
+    "webServer": {
+      "command": "npm run dev",
+      "url": "http://127.0.0.1:8787",
+      "reuseExistingServer": true,
+      "timeout": 120000
+    }
+  },
+  "suites": [
+    {
+      "title": "email-functionality.spec.js",
+      "file": "email-functionality.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "邮件功能详细测试",
+          "file": "email-functionality.spec.js",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "完整邮件工作流测试",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7572,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🚀 开始完整邮件工作流测试\n"
+                        },
+                        {
+                          "text": "✅ 输入邮箱地址: 111@xiaoliu.cloudns.club\n"
+                        },
+                        {
+                          "text": "✅ 点击获取邮件列表按钮\n"
+                        },
+                        {
+                          "text": "✅ 邮箱信息显示: \n            邮箱信息\n            您的邮箱: 111@xiaoliu.cloudns.club\n            邮件数量: 8\n        \n"
+                        },
+                        {
+                          "text": "✅ 点击获取Augment验证码按钮\n"
+                        },
+                        {
+                          "text": "✅ 完整工作流测试完成\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-04T08:13:39.368Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d69ceeb88631a2e44574-46f6350ae4fe4cbf0e94",
+              "file": "email-functionality.spec.js",
+              "line": 7,
+              "column": 5
+            },
+            {
+              "title": "API直接调用测试",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "passed",
+                      "duration": 55,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🔧 开始API直接调用测试\n"
+                        },
+                        {
+                          "text": "邮件API响应状态: 404\n"
+                        },
+                        {
+                          "text": "⚠️ 邮件API响应错误: {\"code\":404,\"message\":\"请求的路由不存在\",\"data\":null,\"success\":false,\"timestamp\":1756973619444}\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-04T08:13:39.382Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d69ceeb88631a2e44574-581868f1d601591e6ddb",
+              "file": "email-functionality.spec.js",
+              "line": 63,
+              "column": 5
+            },
+            {
+              "title": "错误场景测试",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 4080,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "🧪 开始错误场景测试\n"
+                        },
+                        {
+                          "text": "✅ 空邮箱错误处理正常: \n            错误信息\n            请输入邮箱地址\n        \n"
+                        },
+                        {
+                          "text": "✅ 错误场景测试完成\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-09-04T08:13:39.381Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d69ceeb88631a2e44574-71c258b88e0c87d8f1a4",
+              "file": "email-functionality.spec.js",
+              "line": 91,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-09-04T08:13:37.497Z",
+    "duration": 11527.802,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

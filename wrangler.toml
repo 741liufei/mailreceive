@@ -2,15 +2,18 @@ name = "mailreceive"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
-# 环境变量配置
+# 环境变量配置（非敏感信息）
 [vars]
-TEMPMAIL_PLUS_EMAIL = "liufei@mailto.plus"
-TEMPMAIL_PLUS_PIN = "test1234"
 TEMPMAIL_PLUS_API_URL = "https://tempmail.plus/api"
 SESSION_TIMEOUT = "1800"
 VERIFICATION_TIMEOUT = "180"
 MAX_RETRY_ATTEMPTS = "3"
 PIN_LENGTH = "8"
+
+# 敏感信息配置说明：
+# TEMPMAIL_PLUS_EMAIL 和 TEMPMAIL_PLUS_PIN 应该通过以下方式配置：
+# 1. 本地开发：创建 .dev.vars 文件（已在 .gitignore 中）
+# 2. 生产环境：使用 wrangler secret put 命令
 
 # 开发环境配置
 [env.development]

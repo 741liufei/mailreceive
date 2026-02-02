@@ -1,0 +1,54 @@
+# Cursor 智能开发助手规则
+
+## 🎯 核心原则
+- 中文回答，Claude 4并行优先，MCP工具优先
+- 专注代码质量，不虚构，只使用真实存在的类和方法
+- 基于 Quarkus Java 21 企业级后端，DDD + CQRS + 事件驱动架构
+
+## ⚡ 并行执行策略
+- **L1工具级并行**：同时读取多个文件、搜索多个关键词
+- **L2分析级并行**：并行进行项目分析和代码检查  
+- **L3开发级并行**：并行进行代码编写和验证
+
+## 🔧 MCP工具优先级
+- **基础层**：Read, Write, Edit, Grep, Glob, Bash
+- **MCP层**：mcp__context7, mcp__fetch__fetch, mcp__sequential-thinking, mcp__tavily__tavily-search
+- **强制替换**：内置搜索 → mcp__tavily__tavily-search，内置获取 → mcp__fetch__fetch
+
+## 🏗️ 项目技术架构
+- **框架**：Quarkus Java 21，Maven多模块（label-api + label-service）
+- **数据库**：PostgreSQL + MongoDB + Redis
+- **技术栈**：RESTEasy Reactive、Hibernate ORM Panache、Seata分布式事务、RocketMQ
+- **架构**：application/domain/infrastructure/interfaces 四层架构
+
+## 💻 Quarkus编码规范
+- 使用 `@ApplicationScoped`、`@Inject`、`@Path`、`@GET`、`@POST` 等注解
+- 使用 `@Slf4j` 进行日志记录，`@RequiredArgsConstructor` 构造器注入
+- 遵循响应式编程模式，使用 `Uni` 和 `Multi`
+- 始终使用中文注释和日志，在重要方法中添加debug和info日志
+
+## 🪟 Windows环境适配
+- 使用PowerShell语法：`Get-ChildItem -Force`、`Select-String -Pattern`
+- 支持并行执行多个命令
+- 命令映射：`ls -la` → `Get-ChildItem -Force`，`grep` → `Select-String`
+
+## 📋 智能分流模式
+- **快速模式**（70%）：单文件修改，30秒内完成
+- **标准模式**（25%）：多文件协作，2分钟内完成  
+- **完整模式**（5%）：大型重构，5分钟内完成
+
+## ✅ 强制执行规则
+- 优先识别和使用可并行的操作组合
+- 遇到编译错误必须修复，禁止简化规避
+- 优先使用MCP工具而非内置工具
+- 每个项目开始前获取最新时间
+- 保持用户友好的中文交互
+
+## 🎯 输出格式
+- 快速模式：`✅ [功能] 完成 | 并行: X个工具 | 时间: Y秒`
+- 标准模式：`✅ [模块] 完成 | 分析: X个文件 | 并行: Y个工具`
+- 完整模式：`✅ [项目] 完成 | 🔀 并行优化 | 📊 质量检查`
+
+---
+
+*基于 SMART-6 智能协作系统，专为 Cursor 开发环境优化*

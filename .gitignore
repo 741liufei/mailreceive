@@ -1,0 +1,70 @@
+# 依赖文件
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 环境配置文件（包含敏感信息）
+config.env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.dev.vars
+wrangler.toml.local
+
+# 构建输出目录
+target/
+dist/
+build/
+.wrangler/
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统生成的文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 测试文件
+test_browser_automation.js
+test_*.js
+*.test.js
+*.spec.js
+
+# 缓存文件
+.cache/
+.parcel-cache/
+
+# 运行时文件
+*.pid
+*.seed
+*.pid.lock
+
+# 覆盖率报告
+coverage/
+.nyc_output/
+
+# 其他不需要版本控制的文件
+*.tgz
+*.tar.gz

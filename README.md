@@ -73,18 +73,56 @@ npx wrangler login
 
 ### 环境配置
 
-编辑 `wrangler.toml` 文件配置环境变量：
+⚠️ **重要：敏感信息配置**
+
+本项目使用安全的方式管理敏感信息，请按照以下步骤配置：
+
+#### 本地开发
+
+1. 复制环境变量示例文件：
+
+```bash
+cp .dev.vars.example .dev.vars
+```
+
+2. 编辑 `.dev.vars` 文件，填入你的实际配置：
+
+```env
+# Tempmail.plus 邮箱配置
+TEMPMAIL_PLUS_EMAIL=your-email@mailto.plus
+TEMPMAIL_PLUS_PIN=your-pin-code
+```
+
+> 📝 `.dev.vars` 文件已在 `.gitignore` 中，不会被提交到 Git
+
+#### 生产环境
+
+使用 Cloudflare Workers Secrets 配置敏感信息：
+
+```bash
+# 配置邮箱地址
+wrangler secret put TEMPMAIL_PLUS_EMAIL
+
+# 配置 PIN 码
+wrangler secret put TEMPMAIL_PLUS_PIN
+```
+
+#### 非敏感配置
+
+非敏感的配置已在 `wrangler.toml` 中设置，无需修改：
 
 ```toml
 [vars]
-TEMPMAIL_PLUS_EMAIL = "your-email@mailto.plus"
-TEMPMAIL_PLUS_PIN = "your-pin-code"
 TEMPMAIL_PLUS_API_URL = "https://tempmail.plus/api"
 SESSION_TIMEOUT = "1800"
 VERIFICATION_TIMEOUT = "180"
 MAX_RETRY_ATTEMPTS = "3"
 PIN_LENGTH = "8"
 ```
+
+📚 **详细配置指南**: 查看 [docs/ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md)
+
+🔒 **安全说明**: 查看 [SECURITY.md](SECURITY.md)
 
 ### 本地开发
 
@@ -184,7 +222,8 @@ GET /api/session/email-detail?userEmail={email}&emailId={id}
 ### 验证码提取
 
 - ✅ 自动识别验证码
-- ✅ 多种正则表达式模式
+- ✅ 多种正则表达式模式（10+ 种）
+- ✅ 支持 GitHub 验证码格式 ⭐ 新增
 - ✅ 批量验证码提取
 - ✅ 验证码复制功能
 
@@ -194,6 +233,7 @@ GET /api/session/email-detail?userEmail={email}&emailId={id}
 - ✅ 直观的操作流程
 - ✅ 实时状态反馈
 - ✅ 错误处理提示
+- ✅ 专用的 GitHub 验证码按钮 ⭐ 新增
 
 ## 🔧 项目结构
 

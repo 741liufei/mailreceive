@@ -20,8 +20,15 @@ export const REGEX_PATTERNS = {
   VERIFICATION_CODE_SECONDARY: 'verification code is:\\s*(\\d+)',
   CODE_IS: 'code is:\\s*(\\d+)',
   
+  // GitHub 验证码模式
+  GITHUB_LAUNCH_CODE: 'launch code[!\\s]*[\\s\\S]*?(\\d{8})',
+  GITHUB_ENTERING_CODE: 'entering the code below[:\\s]*(\\d{8})',
+  
   // 中文验证码模式
   CHINESE_VERIFICATION: '验证码[：:]\\s*(\\d+)',
+  
+  // 独立的 8 位数字（优先级较高）
+  EIGHT_DIGITS: '\\b\\d{8}\\b',
   
   // 通用数字模式（备用方案）
   SIX_DIGITS: '\\b\\d{6}\\b',
@@ -58,6 +65,18 @@ export const EXTRACTION_STRATEGY = [
     description: '次要模式：verification code is: 数字'
   },
   {
+    name: 'GITHUB_LAUNCH_CODE_PATTERN',
+    pattern: REGEX_PATTERNS.GITHUB_LAUNCH_CODE,
+    flags: REGEX_FLAGS.CASE_INSENSITIVE,
+    description: 'GitHub 模式：launch code 后的 8 位数字'
+  },
+  {
+    name: 'GITHUB_ENTERING_CODE_PATTERN',
+    pattern: REGEX_PATTERNS.GITHUB_ENTERING_CODE,
+    flags: REGEX_FLAGS.CASE_INSENSITIVE,
+    description: 'GitHub 模式：entering the code below 后的 8 位数字'
+  },
+  {
     name: 'CODE_IS_PATTERN',
     pattern: REGEX_PATTERNS.CODE_IS,
     flags: REGEX_FLAGS.CASE_INSENSITIVE,
@@ -74,6 +93,12 @@ export const EXTRACTION_STRATEGY = [
     pattern: REGEX_PATTERNS.HTML_WRAPPED_CODE,
     flags: REGEX_FLAGS.CASE_INSENSITIVE,
     description: 'HTML包围模式：标签内的验证码'
+  },
+  {
+    name: 'EIGHT_DIGITS_PATTERN',
+    pattern: REGEX_PATTERNS.EIGHT_DIGITS,
+    flags: REGEX_FLAGS.GLOBAL,
+    description: '通用模式：8位数字'
   },
   {
     name: 'SIX_DIGITS_PATTERN',
